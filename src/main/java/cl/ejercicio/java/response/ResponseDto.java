@@ -2,6 +2,7 @@ package cl.ejercicio.java.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -11,10 +12,11 @@ import lombok.NoArgsConstructor;
  * @param <T> Tipo de datos incluidos en la respuesta
  */
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Schema(description = "Respuesta estándar de éxito")
-public class ResponseOk<T> {
+public class ResponseDto<T> {
 
     @Schema(description = "Mensaje descriptivo del resultado", example = "Operación exitosa")
     private String message;
@@ -27,7 +29,7 @@ public class ResponseOk<T> {
      *
      * @param message Mensaje descriptivo
      */
-    public ResponseOk(String message) {
+    public ResponseDto(String message) {
         this.message = message;
     }
 }

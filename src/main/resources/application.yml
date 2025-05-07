@@ -1,0 +1,135 @@
+# =============================
+# Validaciones de Regex
+# =============================
+validation:
+  regex:
+    # Mejorado: Permite dominios con subdominios y TLDs más largos (como .co.uk), evita caracteres inválidos
+    email: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(?:\\.[a-zA-Z]{2,})?$"
+    # Mejorado: Permite más caracteres especiales y asegura que no haya espacios
+    password: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$"
+
+# =============================
+# JWT
+# =============================
+client:
+  secret: "MiClaveJWT_SecretaSeguraCon32Chars!"
+  expiration-millis: 3600000 # 60 minutos
+  issuer: "api-user-backend"
+  audience: "usuarios-miapp"
+  algorithm: "HS256"
+
+# =============================
+# Configuración de Logging
+# =============================
+logging:
+  level:
+    # Simplificado: Usar notación más corta y eliminar configuraciones redundantes
+    org.springframework.web: DEBUG
+    org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
+    # Agregado: Nivel de log para la aplicación
+    cl.ejercicio.java: INFO
+    org.springframework.security: DEBUG
+
+  # Agregado: Configuración de patrón de log para mejor legibilidad
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# =============================
+# Configuración de Base de Datos H2
+# =============================
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+    hikari:
+      pool-name: MiHikariCP
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 30000
+      connection-timeout: 30000
+      leak-detection-threshold: 20000
+      max-lifetime: 1800000
+
+  # =============================
+  # Configuración de Hibernate
+  # =============================
+  jpa:
+    hibernate:
+      ddl-auto: none
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        hbm2ddl:
+          auto: validate # Validar el esquema después de la inicialización
+
+  # =============================
+  # Inicialización de Base de Datos
+  # =============================
+  sql:
+    init:
+      mode: always # Asegurar que los scripts se ejecuten
+      schema-locations: classpath:schema-h2.sql
+      data-locations: classpath:data-h2.sql
+      platform: h2
+      continue-on-error: false # Fallar si hay errores en los scripts
+
+  # =============================
+  # Swagger
+  # =============================
+  springdoc:
+    swagger-ui:
+      path: /swagger-ui.html
+      # Agregado: Habilitar características útiles de Swagger
+      display-request-duration: true
+      operations-sorter: alpha
+      tags-sorter: alpha
+
+  # =============================
+  # Consola H2
+  # =============================
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      # Agregado: Permitir acceso remoto (útil para depuración)
+      settings:
+        web-allow-others: true
+
+# =============================
+# Configuración de Seguridad
+# =============================
+security:
+  # Agregado: Configuración básica para endpoints
+  ignored-endpoints:
+    - /h2-console/**
+    - /swagger-ui/**
+    - /v3/api-docs/**
+  # Agregado: Configuración para CORS (si es necesario)
+  cors:
+    #allowed-origins: "http://localhost:3000"
+    allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
+    allowed-headers: "*"
+    exposed-headers: "Authorization"
+    allow-credentials: true
+    max-age: 3600
+# =============================
+# Configuración de la Aplicación
+# =============================
+server:
+  # Agregado: Configuración del puerto
+  port: 8080
+  # Agregado: Manejo de errores más detallado
+  error:
+    include-stacktrace: on-param
+    include-message: always
+  # Agregado: Compresión para respuestas
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+    min-response-size: 1024

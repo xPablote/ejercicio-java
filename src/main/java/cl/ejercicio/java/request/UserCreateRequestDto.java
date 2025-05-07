@@ -20,7 +20,7 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserRequestDto implements Serializable {
+public class UserCreateRequestDto implements Serializable {
 
     @NotBlank(message = "El nombre es obligatorio")
     @Schema(description = "Nombre completo del usuario", example = "Luna Rish")

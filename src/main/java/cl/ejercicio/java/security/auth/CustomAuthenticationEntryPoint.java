@@ -1,4 +1,4 @@
-package cl.ejercicio.java.security;
+package cl.ejercicio.java.security.auth;
 
 import cl.ejercicio.java.exception.ErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;

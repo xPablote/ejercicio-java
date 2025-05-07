@@ -1,144 +1,207 @@
 package cl.ejercicio.java.service.impl;
 
-import cl.ejercicio.java.dto.UserDto;
+import cl.ejercicio.java.config.RegexProperties;
+import cl.ejercicio.java.dto.UserEmailDto;
+import cl.ejercicio.java.entity.Phone;
+import cl.ejercicio.java.entity.Role;
 import cl.ejercicio.java.entity.User;
 import cl.ejercicio.java.exception.InvalidValueException;
 import cl.ejercicio.java.exception.UserException;
+import cl.ejercicio.java.mapper.PhoneMapper;
+import cl.ejercicio.java.mapper.RoleMapper;
+import cl.ejercicio.java.mapper.UserMapper;
 import cl.ejercicio.java.repository.UserRepository;
+import cl.ejercicio.java.request.UserCreateRequestDto;
+import cl.ejercicio.java.request.UserUpdateRequestDto;
+import cl.ejercicio.java.response.UserResponseDto;
 import cl.ejercicio.java.service.UserService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
+/**
+ * Implementación del servicio de operaciones relacionadas con usuarios.
+ */
+@Slf4j
 @Service
+@RequiredArgsConstructor
+@Transactional
+@Validated // <-- Activa la validación automática en parámetros @Valid
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final RoleMapper roleMapper;
+    private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final RegexProperties regexProperties;
 
-    @Value("${password.regex}")
-    private String passwordRegex;
-
-    @Value("${email.regex}")
-    private String emailRegex;
-
-    public UserServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
+    /** {@inheritDoc} */
     @Override
-    public User createUser(UserDto userDto) {
-        if (!isValidEmail(userDto.getEmail())) {
-            throw new InvalidValueException("El correo electrónico no es válido");
+    public User save(@Valid User user) {
+        log.info("Guardando nuevo usuario: {}", user.getEmail());
+
+        if (user.getPassword() != null && !user.getPassword().startsWith("$2a$")) {
+            user.setPassword(encodePassword(user.getPassword()));
         }
-        if (userRepository.existsByEmail(userDto.getEmail())) {
-            throw new InvalidValueException("Correo ya registrado");
-        }
-        if (!isValidPassword(userDto.getPassword())) {
-            throw new InvalidValueException("La contraseña: " +
-                    "Debe contener minimo 8 caracteres, letra mayúscula y minúscula, numeros y carácter especial");
-        }
-        String fechaHora = getFechaHora();
-        User user = User.builder()
-                .name(userDto.getName())
-                .email(userDto.getEmail())
-                .password(userDto.getPassword())
-                .phones(userDto.getPhones())
-                .created(fechaHora)
-                .modified(fechaHora)
-                .lastLogin(fechaHora)
-                .isActive(true)
-                .build();
 
         return userRepository.save(user);
     }
 
-    private static String getFechaHora() {
+    @Override
+    public User createUser(@Valid UserCreateRequestDto userCreateRequestDto) {
+        validateEmailFormat(userCreateRequestDto.getEmail());
+        validatePasswordFormat(userCreateRequestDto.getPassword());
+
+        if (userRepository.existsByEmail(userCreateRequestDto.getEmail())) {
+            throw new InvalidValueException("El correo ya está registrado");
+        }
+
+        Set<String> rolesToMap;
+        if (userCreateRequestDto.getRoles() != null) {
+            rolesToMap = userCreateRequestDto.getRoles();
+        } else {
+            rolesToMap = Set.of("ROLE_USER");
+        }
+        Set<Role> resolvedRoles = roleMapper.mapStringsToRoles(rolesToMap);
+
+        User newUser = userMapper.mapToUser(userCreateRequestDto, resolvedRoles);
+        newUser.setPassword(encodePassword(newUser.getPassword()));
         LocalDateTime now = LocalDateTime.now();
-        return now.format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"));
+        newUser.setCreated(now);
+        newUser.setModified(now);
+        newUser.setLastLogin(now);
+        newUser.setActive(true);
+
+        return userRepository.save(newUser);
     }
 
     @Override
-    public User getUserByEmail(String email) {
-        if (!isValidEmail(email)) {
-            throw new InvalidValueException("Email no es válido");
-        }
-        if (!userRepository.existsByEmail(email)) {
-            throw new InvalidValueException("Email inexistente");
-        }
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserException("Usuario con email " + email + " no encontrado"));
+    public User updateLastLoginAndToken(String email, String token) {
+        User user = findByEmail(email);
+        LocalDateTime now = LocalDateTime.now();
+        user.setLastLogin(now);
+        user.setModified(now);
+        user.setToken(token);
+
+        log.info("Actualizando lastLogin y token para el usuario: {}", email);
+        return userRepository.save(user);
     }
 
-
     @Override
-    public User updateUser( @Valid UserDto updatedUser) {
-        if (!isValidEmail(updatedUser.getEmail())) {
-            throw new InvalidValueException("Email no es válido");
-        }
-        String email = updatedUser.getEmail();
-        User existingUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserException("Usuario con email " + email + " no encontrado"));
-        if (!existingUser.isActive()){
+    public UserResponseDto updateUser(@Valid UserUpdateRequestDto updatedUser) {
+        User existingUser = findByEmail(updatedUser.getEmail());
+
+        if (!existingUser.isActive()) {
             throw new InvalidValueException("Usuario inactivo");
         }
+
         if (updatedUser.getName() != null) {
             existingUser.setName(updatedUser.getName());
         }
-        if (updatedUser.getPassword() != null) {
-            existingUser.setPassword(updatedUser.getPassword());
+
+        if (updatedUser.getPhones() != null && !updatedUser.getPhones().isEmpty()) {
+            List<Phone> phones = PhoneMapper.mapPhoneDtosToPhones(updatedUser.getPhones(), existingUser);
+            existingUser.setPhones(phones);
         }
-        if (updatedUser.getPhones() != null) {
-            existingUser.setPhones(updatedUser.getPhones());
+
+        if (updatedUser.getRoles() != null && !updatedUser.getRoles().isEmpty()) {
+            Set<Role> validatedRoles = roleMapper.mapStringsToRoles(updatedUser.getRoles());
+            existingUser.setRoles(validatedRoles);
         }
-        String fechaHoraUpdate = getFechaHora();
-        existingUser.setModified(fechaHoraUpdate);
+
+        existingUser.setModified(LocalDateTime.now());
         existingUser.setActive(true);
 
-        return userRepository.save(existingUser);
-    }
-
-    @Transactional
-    public void deleteUserByEmail(String email) {
-        if (!isValidEmail(email)) {
-            throw new InvalidValueException("Email no es válido");
-        }
-        User userToDelete = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserException("email inexistente " + email ));
-        if (!userToDelete.isActive()){
-            throw new InvalidValueException("Usuario inactivo");
-        }
-        userRepository.delete(userToDelete);
+        User savedUser = userRepository.save(existingUser);
+        return userMapper.mapToUserResponseDto(savedUser);
     }
 
     @Override
-    public User updateUserByEmail(String email, UserDto userDto) {
-        if (!isValidEmail(email)) {
-            throw new InvalidValueException("Email no es válido");
+    public UserResponseDto updateUserEmail(String currentEmail, @Valid UserEmailDto userEmailDto) {
+        validateEmailFormat(currentEmail);
+        validateEmailFormat(userEmailDto.getEmail());
+
+        User existingUser = findByEmail(currentEmail);
+
+        if (userRepository.existsByEmail(userEmailDto.getEmail())) {
+            throw new InvalidValueException("El nuevo correo ya está registrado");
         }
-        if (!isValidPassword(userDto.getPassword())) {
-            throw new InvalidValueException("La contraseña: " +
-                    "Debe contener minimo 8 caracteres, letra mayúscula y minúscula, numeros y carácter especial");
-        }
-        User existingUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new InvalidValueException("email inexistente " + email ));
-        if (userDto.getName() != null) existingUser.setName(userDto.getName());
-        if (userDto.getEmail() != null) existingUser.setEmail(userDto.getEmail());
-        if (userDto.getPassword() != null) existingUser.setPassword(userDto.getPassword());
-        if (userDto.getPhones() != null) existingUser.setPhones(userDto.getPhones());
-        existingUser.setModified(getFechaHora());
-        return userRepository.save(existingUser);
+
+        existingUser.setEmail(userEmailDto.getEmail());
+        existingUser.setModified(LocalDateTime.now());
+
+        User savedUser = userRepository.save(existingUser);
+        return userMapper.mapToUserResponseDto(savedUser);
     }
 
-    private boolean isValidPassword(String password) {
-        return Pattern.matches(passwordRegex, password);
+    @Override
+    public UserResponseDto getUser(String email) {
+        validateEmailFormat(email);
+        return userMapper.mapToUserResponseDto(findByEmail(email));
     }
 
-    private boolean isValidEmail(String email) {
-        return Pattern.matches(emailRegex, email);
+    @Override
+    public List<UserResponseDto> getAllUsers() {
+        log.info("Obteniendo todos los usuarios");
+        return userRepository.findAll()
+                .stream()
+                .map(userMapper::mapToUserResponseDto)
+                .toList();
+    }
+
+    @Override
+    public void deleteUserByEmail(@Valid UserEmailDto dto) {
+        validateEmailFormat(dto.getEmail());
+
+        User user = findByEmail(dto.getEmail());
+        userRepository.delete(user);
+
+        log.info("Usuario eliminado correctamente con email: {}", dto.getEmail());
+    }
+
+    @Override
+    public User findByEmail(String email) {
+        validateEmailFormat(email);
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserException("Usuario no encontrado con email: " + email));
+    }
+
+    @Override
+    public User findById(UUID id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserException("Usuario no encontrado con id: " + id));
+    }
+
+    @Override
+    public String encodePassword(String rawPassword) {
+        return passwordEncoder.encode(rawPassword);
+    }
+
+    /**
+     * Valida que el formato del email sea correcto.
+     *
+     * @param email el email a validar
+     * @throws InvalidValueException si el formato es inválido
+     */
+    private void validateEmailFormat(String email) {
+        if (email == null || email.trim().isEmpty() || !Pattern.matches(regexProperties.getEmail(), email)) {
+            throw new InvalidValueException("Formato de correo electrónico no válido");
+        }
+    }
+
+    private void validatePasswordFormat(String password) {
+        if (password == null || !Pattern.matches(regexProperties.getPassword(), password)) {
+            throw new InvalidValueException("Debe tener mínimo 8 caracteres, incluir una mayúscula, minúscula, número y carácter especial");
+        }
     }
 }
