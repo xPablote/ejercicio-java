@@ -12,6 +12,7 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Collections;
 
 /**
@@ -37,6 +38,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .errors(Collections.singletonList("No tiene permisos para realizar esta acción."))
+                .timestamp(LocalDateTime.now())
                 .build();
 
         response.getWriter().write(objectMapper.writeValueAsString(errorResponse));

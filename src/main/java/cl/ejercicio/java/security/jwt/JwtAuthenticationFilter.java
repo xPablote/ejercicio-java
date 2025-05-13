@@ -1,7 +1,6 @@
 package cl.ejercicio.java.security.jwt;
 
 import cl.ejercicio.java.security.CustomUserDetailsService;
-import cl.ejercicio.java.security.SecurityConstants;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -46,12 +45,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        log.info("Verificando si se debe filtrar: {}", request.getServletPath());
         String path = request.getServletPath();
-        boolean shouldNotFilter = SecurityConstants.PUBLIC_ENDPOINTS.stream()
-                .anyMatch(pattern -> pathMatcher.match(pattern, path));
-        log.info("shouldNotFilter para {}: {}", path, shouldNotFilter);
-        return shouldNotFilter;
+        // Solo excluye endpoints públicos específicos
+        return path.startsWith("/api/v1/auth") ||
+                (path.startsWith("/api/v1/users") &&
+                        request.getMethod().equals("GET"));
     }
 
     /**

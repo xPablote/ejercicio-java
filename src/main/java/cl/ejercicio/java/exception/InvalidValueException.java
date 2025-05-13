@@ -1,9 +1,12 @@
 package cl.ejercicio.java.exception;
 
+import java.io.Serializable;
+
 /**
  * Excepción personalizada para valores inválidos en operaciones de validación.
  */
-public class InvalidValueException extends RuntimeException {
+public class InvalidValueException extends RuntimeException implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * Construye una nueva excepción de valor inválido con un mensaje específico.

@@ -1,9 +1,12 @@
 package cl.ejercicio.java.exception;
 
+import java.io.Serializable;
+
 /**
  * Excepción personalizada para errores relacionados con operaciones de usuario.
  */
-public class UserException extends RuntimeException {
+public class UserException extends RuntimeException implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * Construye una nueva excepción de usuario con un mensaje específico.

@@ -5,7 +5,6 @@ import cl.ejercicio.java.entity.User;
 import cl.ejercicio.java.request.UserCreateRequestDto;
 import cl.ejercicio.java.request.UserUpdateRequestDto;
 import cl.ejercicio.java.response.UserResponseDto;
-import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.UUID;
@@ -21,7 +20,7 @@ public interface UserService {
      * @param user entidad de usuario
      * @return el usuario guardado
      */
-    User save(@Valid User user);
+    User save( User user);
 
     /**
      * Crea un nuevo usuario a partir de un DTO.
@@ -29,7 +28,7 @@ public interface UserService {
      * @param userCreateRequestDto datos del nuevo usuario
      * @return el usuario creado
      */
-    User createUser(@Valid UserCreateRequestDto userCreateRequestDto);
+    User createUser( UserCreateRequestDto userCreateRequestDto);
 
     /**
      * Actualiza los datos de un usuario existente.
@@ -37,7 +36,7 @@ public interface UserService {
      * @param updatedUser datos actualizados del usuario
      * @return el usuario actualizado
      */
-    UserResponseDto updateUser(@Valid UserUpdateRequestDto updatedUser);
+    UserResponseDto updateUser( UserUpdateRequestDto updatedUser);
 
     /**
      * Actualiza el email de un usuario.
@@ -46,7 +45,7 @@ public interface UserService {
      * @param userEmailDto nuevo email
      * @return el usuario actualizado
      */
-    UserResponseDto updateUserEmail(String currentEmail, @Valid UserEmailDto userEmailDto) ;
+    UserResponseDto updateUserEmail(String currentEmail,  UserEmailDto userEmailDto) ;
 
     /**
      * Obtiene un usuario por su email.
@@ -68,7 +67,7 @@ public interface UserService {
      *
      * @param dto DTO que contiene el email a eliminar
      */
-    void deleteUserByEmail(@Valid UserEmailDto dto);
+    void deleteUserByEmail( UserEmailDto dto);
 
     /**
      * Busca un usuario por su email.

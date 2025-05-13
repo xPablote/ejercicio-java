@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotEmpty;
 import lombok.Builder;
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
@@ -20,6 +21,9 @@ import java.util.UUID;
 @Builder
 @Schema(description = "Respuesta devuelta tras autenticación exitosa")
 public class AuthResponseDto implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     @Schema(description = "Identificador único del usuario", example = "550e8400-e29b-41d4-a716-446655440000")
     private UUID id;

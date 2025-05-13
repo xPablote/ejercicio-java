@@ -3,7 +3,7 @@
 # =============================
 validation:
   regex:
-    # Mejorado: Permite dominios con subdominios y TLDs más largos (como .co.uk), evita caracteres inválidos
+    # Mejorado: Permite dominios con subdominios y más largos (como .co.uk), evita caracteres inválidos
     email: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(?:\\.[a-zA-Z]{2,})?$"
     # Mejorado: Permite más caracteres especiales y asegura que no haya espacios
     password: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$"

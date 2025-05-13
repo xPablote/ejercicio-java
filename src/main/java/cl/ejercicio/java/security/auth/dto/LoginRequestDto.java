@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -19,6 +20,9 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Schema(description = "Credenciales de inicio de sesión del usuario")
 public class LoginRequestDto implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     @NotBlank(message = "debe ingresar el email")
     @Email(message = "email: formato inválido")

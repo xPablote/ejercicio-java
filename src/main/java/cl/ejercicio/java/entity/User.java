@@ -28,7 +28,7 @@ public class User {
      * Identificador único del usuario.
      */
     @Id
-    private UUID id = UUID.randomUUID();
+    private UUID id;
 
     /**
      * Nombre completo del usuario.
@@ -48,6 +48,7 @@ public class User {
     /**
      * Contraseña cifrada del usuario.
      */
+
     @NotBlank
     private String password;
 
@@ -100,6 +101,7 @@ public class User {
 
     @Version
     @Builder.Default // Aseguramos que version tenga un valor inicial
+    @Column(nullable = false)
     private Long version = 0L;
 
     // Método para sincronizar la relación bidireccional

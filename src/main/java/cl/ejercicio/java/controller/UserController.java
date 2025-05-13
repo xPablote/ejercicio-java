@@ -35,7 +35,6 @@ import java.util.List;
 @RequestMapping("/api/v1/users")
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
-@SecurityRequirement(name = "BearerAuth")
 @Tag(name = "Usuario", description = "Operaciones relacionadas con usuarios")
 public class UserController {
 
@@ -49,13 +48,13 @@ public class UserController {
      * @param userCreateRequestDto los datos del usuario a crear, deben ser válidos
      * @return ResponseOk con el usuario creado
      */
-    @Operation(summary = "Crea un usuario", description = "Permite crear un nuevo usuario proporcionando la información requerida.")
+    @Operation(summary = "Crea un usuario", description = "Permite crear un nuevo usuario proporcionando la información requerida.", security = @SecurityRequirement(name = "BearerAuth"))
     @ApiResponse(responseCode = "201", description = "Usuario creado exitosamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDto.class)))
     @ApiResponse(responseCode = "400", description = "Solicitud incorrecta", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "409", description = "Correo ya registrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "401", description = "No autorizado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "403", description = "Sin privilegios", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
-    @PostMapping
+    @PostMapping("/create")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseDto<UserResponseDto> createUser(@Valid @RequestBody UserCreateRequestDto userCreateRequestDto) {
@@ -73,13 +72,13 @@ public class UserController {
      * @param updatedUser Datos actualizados del usuario
      * @return ResponseOk con el usuario actualizado
      */
-    @Operation(summary = "Actualiza completamente un usuario", description = "Reemplaza toda la información de un usuario existente mediante su email.")
+    @Operation(summary = "Actualiza completamente un usuario", description = "Reemplaza toda la información de un usuario existente mediante su email.", security = @SecurityRequirement(name = "BearerAuth"))
     @ApiResponse(responseCode = "200", description = "Usuario actualizado exitosamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDto.class)))
     @ApiResponse(responseCode = "400", description = "Solicitud incorrecta", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "401", description = "No autorizado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "403", description = "Sin privilegios", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
-    @PutMapping("/{email}")
+    @PutMapping("/update/{email}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @ResponseStatus(HttpStatus.OK)
     public ResponseDto<UserResponseDto> updateUser(@PathVariable String email, @Valid @RequestBody UserUpdateRequestDto updatedUser) {
@@ -100,13 +99,13 @@ public class UserController {
      * @param newEmailDto DTO con el nuevo email
      * @return ResponseOk con el usuario actualizado
      */
-    @Operation(summary = "Actualiza el email de un usuario", description = "Permite cambiar solo el email usando el email actual.")
+    @Operation(summary = "Actualiza el email de un usuario", description = "Permite cambiar solo el email usando el email actual.", security = @SecurityRequirement(name = "BearerAuth"))
     @ApiResponse(responseCode = "200", description = "Email actualizado correctamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDto.class)))
     @ApiResponse(responseCode = "400", description = "Datos inválidos", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "401", description = "No autorizado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "403", description = "Sin privilegios", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
-    @PatchMapping("/{email}/email")
+    @PatchMapping("/updateEmail/{email}/email")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @ResponseStatus(HttpStatus.OK)
     public ResponseDto<UserResponseDto> updateUserEmail(
@@ -124,14 +123,13 @@ public class UserController {
      * @param email Correo electrónico del usuario a buscar
      * @return ResponseOk con el usuario encontrado
      */
-    @Operation(summary = "Obtiene un usuario por su email", description = "Devuelve los datos de un usuario mediante su email.")
+    @Operation(summary = "Obtiene un usuario por su email", description = "Devuelve los datos de un usuario mediante su email.", security = @SecurityRequirement(name = "BearerAuth"))
     @ApiResponse(responseCode = "200", description = "Usuario encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDto.class)))
     @ApiResponse(responseCode = "400", description = "Correo inválido", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
-    @ApiResponse(responseCode = "401", description = "No autorizado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "403", description = "Sin privilegios", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
-    @GetMapping("/{email}")
-    @PreAuthorize("permitAll()")
+    @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_ADMIN')")
+    @GetMapping("/getUser/{email}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseDto<UserResponseDto> getUser(@PathVariable String email) {
         log.info("Buscando usuario con email: {}", email);
@@ -145,13 +143,12 @@ public class UserController {
      *
      * @return ResponseOk con la lista de usuarios
      */
-    @Operation(summary = "Lista todos los usuarios", description = "Devuelve una lista con todos los usuarios registrados.")
+    @Operation(summary = "Lista todos los usuarios", description = "Devuelve una lista con todos los usuarios registrados.", security = @SecurityRequirement(name = "BearerAuth"))
     @ApiResponse(responseCode = "200", description = "Lista de usuarios obtenida exitosamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDto.class)))
     @ApiResponse(responseCode = "500", description = "Error interno al obtener usuarios", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
-    @ApiResponse(responseCode = "401", description = "No autorizado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "403", description = "Sin privilegios", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
-    @GetMapping
-    @PreAuthorize("permitAll()")
+    @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_ADMIN')")
+    @GetMapping("/getAllUsers")
     @ResponseStatus(HttpStatus.OK)
     public ResponseDto<List<UserResponseDto>> getAllUsers() {
         List<UserResponseDto> users = userService.getAllUsers();
@@ -164,13 +161,13 @@ public class UserController {
      * @param email Correo electrónico del usuario a eliminar
      * @return ResponseOk confirmando la eliminación
      */
-    @Operation(summary = "Eliminar un usuario por email", description = "Elimina un usuario existente dado su email. Solo accesible por administradores.")
+    @Operation(summary = "Eliminar un usuario por email", description = "Elimina un usuario existente dado su email. Solo accesible por administradores.", security = @SecurityRequirement(name = "BearerAuth"))
     @ApiResponse(responseCode = "200", description = "Usuario eliminado correctamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDto.class)))
     @ApiResponse(responseCode = "400", description = "Correo inválido", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "401", description = "No autorizado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @ApiResponse(responseCode = "403", description = "Sin privilegios", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
-    @DeleteMapping("/{email}")
+    @DeleteMapping("/delete/{email}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @ResponseStatus(HttpStatus.OK)
     public ResponseDto<String> deleteUserByEmail(@PathVariable String email) {

@@ -1,5 +1,6 @@
 package cl.ejercicio.java.exception;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,7 +28,8 @@ public class ErrorResponse {
 
     @Schema(
             description = "Fecha y hora en que ocurrió el error",
-            example = "2025-04-26T14:32:05"
+            example = "2025-04-26 14:32:05"
     )
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime timestamp;
 }

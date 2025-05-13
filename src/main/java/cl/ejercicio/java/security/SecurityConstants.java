@@ -10,15 +10,28 @@ import java.util.stream.Stream;
  */
 public final class SecurityConstants {
 
+    public static final List<String> MISC_ENDPOINTS = List.of(
+            "/favicon.ico",
+            "/",
+            "/login"
+    );
+
     /** Endpoints públicos de autenticación */
     public static final List<String> AUTH_ENDPOINTS = List.of(
-            "/api/auth/login",
-            "/api/auth/register"
+            "/api/v1/auth/**"
     );
-    /** Endpoints públicos de autenticación */
-    public static final List<String> USER_ENDPOINTS = List.of(
-            "/api/v1/users", // Por ejemplo, para listar usuarios
-            "/api/v1/users/{id}" // Por ejemplo, para obtener un usuario
+    /** Endpoints que requieren autenticación y están restringidos a ROLE_USER o ROLE_ADMIN */
+    public static final List<String> USER_PUBLIC_ENDPOINTS = List.of(
+            "/api/v1/users/getUser/**",
+            "/api/v1/users/getAllUsers"
+    );
+
+    /** Endpoints que requieren autenticación y están restringidos a ROLE_ADMIN */
+    public static final List<String> ADMIN_PRIVATE_ENDPOINTS = List.of(
+            "/api/v1/users/create",
+            "/api/v1/users/update/**",
+            "/api/v1/users/updateEmail/**",
+            "/api/v1/users/delete/**"
     );
 
     /** Endpoints públicos para Swagger con springdoc-openapi v2 */
@@ -39,7 +52,7 @@ public final class SecurityConstants {
                     AUTH_ENDPOINTS,
                     SWAGGER_ENDPOINTS,
                     H2_CONSOLE_ENDPOINTS,
-                    USER_ENDPOINTS
+                    MISC_ENDPOINTS
             ).flatMap(List::stream).toList()
     );
 

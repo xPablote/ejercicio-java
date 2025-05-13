@@ -15,13 +15,11 @@ import cl.ejercicio.java.request.UserCreateRequestDto;
 import cl.ejercicio.java.request.UserUpdateRequestDto;
 import cl.ejercicio.java.response.UserResponseDto;
 import cl.ejercicio.java.service.UserService;
-import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,7 +34,6 @@ import java.util.regex.Pattern;
 @Service
 @RequiredArgsConstructor
 @Transactional
-@Validated // <-- Activa la validación automática en parámetros @Valid
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -47,7 +44,7 @@ public class UserServiceImpl implements UserService {
 
     /** {@inheritDoc} */
     @Override
-    public User save(@Valid User user) {
+    public User save(User user) {
         log.info("Guardando nuevo usuario: {}", user.getEmail());
 
         if (user.getPassword() != null && !user.getPassword().startsWith("$2a$")) {
@@ -58,7 +55,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User createUser(@Valid UserCreateRequestDto userCreateRequestDto) {
+    public User createUser(UserCreateRequestDto userCreateRequestDto) {
         validateEmailFormat(userCreateRequestDto.getEmail());
         validatePasswordFormat(userCreateRequestDto.getPassword());
 
@@ -98,7 +95,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponseDto updateUser(@Valid UserUpdateRequestDto updatedUser) {
+    public UserResponseDto updateUser( UserUpdateRequestDto updatedUser) {
         User existingUser = findByEmail(updatedUser.getEmail());
 
         if (!existingUser.isActive()) {
@@ -127,7 +124,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponseDto updateUserEmail(String currentEmail, @Valid UserEmailDto userEmailDto) {
+    public UserResponseDto updateUserEmail(String currentEmail,  UserEmailDto userEmailDto) {
         validateEmailFormat(currentEmail);
         validateEmailFormat(userEmailDto.getEmail());
 
@@ -160,7 +157,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteUserByEmail(@Valid UserEmailDto dto) {
+    public void deleteUserByEmail( UserEmailDto dto) {
         validateEmailFormat(dto.getEmail());
 
         User user = findByEmail(dto.getEmail());
@@ -188,7 +185,7 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * Valida que el formato del email sea correcto.
+     * Valída que el formato del email sea correcto.
      *
      * @param email el email a validar
      * @throws InvalidValueException si el formato es inválido

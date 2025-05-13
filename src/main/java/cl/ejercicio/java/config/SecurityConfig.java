@@ -9,7 +9,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -17,6 +16,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -50,8 +50,13 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET,  SecurityConstants.PUBLIC_ENDPOINTS.toArray(new String[0])).permitAll()
-                        .requestMatchers(HttpMethod.POST,  SecurityConstants.PUBLIC_ENDPOINTS.toArray(new String[0])).permitAll()
+                        // Endpoints públicos (como login y Swagger UI)
+                        .requestMatchers(SecurityConstants.PUBLIC_ENDPOINTS.toArray(new String[0])).permitAll()
+                        // Endpoints solo para ROLE_ADMIN
+                        .requestMatchers(SecurityConstants.ADMIN_PRIVATE_ENDPOINTS.toArray(new String[0])).hasAuthority("ROLE_ADMIN")
+                        // Endpoints para ROLE_USER y ROLE_ADMIN
+                        .requestMatchers(SecurityConstants.USER_PUBLIC_ENDPOINTS.toArray(new String[0])).hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                        // Cualquier otro endpoint requiere autenticación
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex
@@ -85,11 +90,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*")); // Ok
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")); // Ok
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin"));
+        config.setAllowedOrigins(List.of("*"));  //config.setAllowedOrigins(List.of("http://localhost:4200"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setExposedHeaders(List.of("Authorization"));
-        config.setAllowCredentials(true);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
@@ -112,8 +117,13 @@ public class SecurityConfig {
         filter.setIncludeClientInfo(true);
         filter.setIncludeQueryString(true);
         filter.setIncludeHeaders(true);
-        filter.setIncludePayload(true); // Aquí va tu línea
+        filter.setIncludePayload(true);
         filter.setMaxPayloadLength(10000);
         return filter;
+    }
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring().requestMatchers("/favicon.ico");
     }
 }

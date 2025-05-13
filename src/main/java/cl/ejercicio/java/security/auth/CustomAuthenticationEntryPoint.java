@@ -12,6 +12,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Collections;
 
 /**
@@ -36,7 +37,8 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         response.setContentType("application/json");
 
         ErrorResponse errorResponse = ErrorResponse.builder()
-                .errors(Collections.singletonList("No está autorizado para acceder a este recurso."))
+                .errors(Collections.singletonList("No esta autorizado para acceder a este recurso."))
+                .timestamp(LocalDateTime.now())
                 .build();
 
         response.getWriter().write(objectMapper.writeValueAsString(errorResponse));

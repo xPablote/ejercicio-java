@@ -12,6 +12,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
@@ -21,6 +22,9 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserUpdateRequestDto implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     @NotBlank(message = "El nombre es obligatorio")
     @Schema(description = "Nombre completo del usuario", example = "Luna Rish")
