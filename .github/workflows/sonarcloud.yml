@@ -30,10 +30,10 @@ jobs:
         run: |
           mvn -B clean verify 
           mvn -B sonar:sonar \
-            -Dsonar.organization=xpablote \  # ← Minúsculas
-            -Dsonar.projectKey=xpablote_ejercicio-java \  # ← Coherencia con organización
+            -Dsonar.organization=xpablote \
+            -Dsonar.projectKey=xpablote_ejercicio-java \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
             -Dsonar.java.coveragePlugin=jacoco \
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
-            -Dsonar.junit.reportPaths=target/surefire-reports  #
+            -Dsonar.junit.reportPaths=target/surefire-reports
