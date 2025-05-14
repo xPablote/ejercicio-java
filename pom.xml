@@ -24,6 +24,9 @@
 		<sonar-maven-plugin.version>3.11.0.3922</sonar-maven-plugin.version>
 		<jacoco.version>0.8.11</jacoco.version>
 		<sonar.exclusions>**/target/generated-sources/**</sonar.exclusions>
+		<sonar.organization>xpablote</sonar.organization>
+		<sonar.projectKey>xpablote_ejercicio-java</sonar.projectKey>
+		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
 	</properties>
 
 	<dependencies>
