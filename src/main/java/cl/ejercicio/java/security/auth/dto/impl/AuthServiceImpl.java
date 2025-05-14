@@ -120,7 +120,7 @@ public class AuthServiceImpl implements AuthService {
         List<Phone> phones = PhoneMapper.mapPhoneDtosToPhones(requestDto.getPhones(), user);
         log.info("Teléfonos mapeados antes de persistir: {}", phones.stream()
                 .map(phone -> "Phone{number=" + phone.getNumber() + ", cityCode=" + phone.getCityCode() + ", countryCode=" + phone.getCountryCode() + "}")
-                .collect(Collectors.toList()));
+                .toList());
 
         user.setPhones(phones);
         // Guardar el usuario y capturar la entidad persistida

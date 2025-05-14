@@ -30,7 +30,6 @@ public class CustomUserDetailsService implements UserDetailsService {
         // Mapear los nombres de los roles (por ejemplo, ROLE_ADMIN, ROLE_USER) a SimpleGrantedAuthority
         var authorities = user.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority(role.getName()))
-                .peek(authority -> log.info("Autoridad cargada desde DB: {}", authority.getAuthority()))
                 .toList();
 
         return new org.springframework.security.core.userdetails.User(

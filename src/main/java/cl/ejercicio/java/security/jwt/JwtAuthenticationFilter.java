@@ -13,7 +13,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -29,7 +28,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
-    private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     public JwtAuthenticationFilter(JwtService jwtService, CustomUserDetailsService userDetailsService) {
         this.jwtService = jwtService;
@@ -99,9 +97,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * @param authHeader el encabezado Authorization
      * @return el token JWT
      */
-    private String extractToken(String authHeader) {
-        return authHeader.substring(7); // "Bearer " son 7 caracteres
-    }
 
     /**
      * Establece el contexto de autenticación para el usuario.
