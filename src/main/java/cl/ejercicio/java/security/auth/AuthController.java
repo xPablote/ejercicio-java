@@ -17,6 +17,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,8 +39,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/auth")
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
-@Tag(
-        name = "Autenticación",
+@Tag(   name = "Autenticación",
         description = """
         Operaciones relacionadas al login, registro y renovación de tokens.
 
@@ -47,8 +47,7 @@ import org.springframework.web.bind.annotation.*;
         1. Autentíquese con `/api/auth/login`.
         2. Copie el token JWT del campo `token`.
         3. Haga clic en el botón 'Authorize' de Swagger e ingrese: `Bearer <token>`
-        """
-)
+        """   )
 public class AuthController {
 
     private final AuthService authService;
@@ -65,36 +64,12 @@ public class AuthController {
      * @see LoginRequestDto
      * @see AuthResponseDto
      */
-    @Operation(
-            summary = "Login de usuario",
-            description = "Permite autenticar un usuario existente y obtener un token JWT.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "Login exitoso",
-                            content = @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = ResponseDto.class))
-                    ),
-                    @ApiResponse(
-                            responseCode = "400",
-                            description = "Datos inválidos (falta email o password, o formato incorrecto)",
-                            content = @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class))
-                    ),
-                    @ApiResponse(
-                            responseCode = "401",
-                            description = "Credenciales incorrectas",
-                            content = @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class))
-                    ),
-                    @ApiResponse(
-                            responseCode = "500",
-                            description = "Error inesperado en el servidor",
-                            content = @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class))
-                    )
-            }
-    )
+    @Operation(summary = "Login de usuario", description = "Permite autenticar un usuario existente y obtener un token JWT.")
+    @ApiResponse(responseCode = "200", description = "Login exitoso", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDto.class)))
+    @ApiResponse(responseCode = "400", description = "Datos inválidos (falta email o password, o formato incorrecto)", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "401", description = "Credenciales incorrectas", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "500", description = "Error inesperado en el servidor", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    @PreAuthorize("permitAll()")
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
     public ResponseDto<AuthResponseDto> login(@Valid @RequestBody LoginRequestDto loginDto) {
@@ -116,30 +91,11 @@ public class AuthController {
      * @see UserCreateRequestDto
      * @see AuthResponseDto
      */
-    @Operation(
-            summary = "Registrarse",
-            description = "Registra un nuevo usuario y retorna un token JWT.",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "201",
-                            description = "Registro exitoso",
-                            content = @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = ResponseDto.class))
-                    ),
-                    @ApiResponse(
-                            responseCode = "400",
-                            description = "Datos inválidos (campos faltantes o mal formateados)",
-                            content = @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class))
-                    ),
-                    @ApiResponse(
-                            responseCode = "500",
-                            description = "Error inesperado",
-                            content = @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = ErrorResponse.class))
-                    )
-            }
-    )
+    @Operation(summary = "Registrarse", description = "Registra un nuevo usuario y retorna un token JWT.")
+    @ApiResponse(responseCode = "201", description = "Registro exitoso", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDto.class)))
+    @ApiResponse(responseCode = "400", description = "Datos inválidos (campos faltantes o mal formateados)", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "500", description = "Error inesperado en el servidor", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    @PreAuthorize("permitAll()")
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseDto<AuthResponseDto> register(@Valid @RequestBody UserCreateRequestDto userCreateRequestDto) {
