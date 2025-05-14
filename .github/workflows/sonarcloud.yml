@@ -6,7 +6,8 @@ on:
     types: [opened, synchronize, reopened]
 
 env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Movido al nivel global
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
 jobs:
   build-and-analyze:
@@ -28,12 +29,25 @@ jobs:
 
       - name: Build and analyze
         run: |
-          mvn -B clean verify 
-          mvn -B sonar:sonar \
-            -Dsonar.organization=xpablote \
-            -Dsonar.projectKey=xpablote_ejercicio-java \
-            -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-            -Dsonar.java.coveragePlugin=jacoco \
-            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
-            -Dsonar.junit.reportPaths=target/surefire-reports
+          # Primero verifica si el proyecto existe en SonarCloud
+          if ! curl -s -u "$SONAR_TOKEN": "https://sonarcloud.io/api/projects/search?projects=xpablote_ejercicio-java" | grep -q '"projects":\[\]'; then
+            echo "Proyecto ya existe en SonarCloud, procediendo con análisis..."
+            mvn -B clean verify sonar:sonar \
+              -Dsonar.organization=xpablote \
+              -Dsonar.projectKey=xpablote_ejercicio-java \
+              -Dsonar.host.url=https://sonarcloud.io \
+              -Dsonar.branch.name=${{ github.ref_name }} \
+              -Dsonar.java.coveragePlugin=jacoco \
+              -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+              -Dsonar.junit.reportPaths=target/surefire-reports
+          else
+            echo "Proyecto no existe, realizando primer análisis con rama main..."
+            mvn -B clean verify sonar:sonar \
+              -Dsonar.organization=xpablote \
+              -Dsonar.projectKey=xpablote_ejercicio-java \
+              -Dsonar.host.url=https://sonarcloud.io \
+              -Dsonar.branch.name=main \
+              -Dsonar.java.coveragePlugin=jacoco \
+              -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+              -Dsonar.junit.reportPaths=target/surefire-reports
+          fi
